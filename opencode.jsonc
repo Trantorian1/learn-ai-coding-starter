@@ -40,5 +40,17 @@
         ".nix"
       ]
     }
-  }
+  },
+  "permissions": [
+    {
+      "action": "shell",
+      "resource": "git push *",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "bootdev run *",
+      "effect": "allow"
+    }
+  ]
 }
