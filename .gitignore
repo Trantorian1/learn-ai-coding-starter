@@ -3,3 +3,7 @@
 .pytest_cache/
 __pycache__/
 .out
+.env
+result
+.sandbox
+nix-store-overlay.img
