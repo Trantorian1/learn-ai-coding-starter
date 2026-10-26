@@ -5,69 +5,69 @@
 
     opencode-sandbox.url = "github:OpencodeSandbox/opencode-sandbox?ref=feat/opencodev2";
     opencode-sandbox.inputs.nixpkgs.follows = "nixpkgs";
+    opencode-sandbox.inputs.nixlib.follows = "nixlib";
   };
 
-  outputs = {nixlib, ...} @ inputs: let
-    systems = ["x86_64-linux"];
-    util = nixlib.util {inherit systems inputs;};
-  in {
-    formatter = util.forEachSystem ({pkgs, ...}: pkgs.alejandra);
+  outputs = {nixlib, ...} @ inputs:
+    nixlib.flake inputs ({self, ...}: {
+      systems = ["x86_64-linux"];
 
-    nixosModules = util.forEachModule {
-      sandbox-config = {self, ...}: {
-        opencode-sandbox = {
-          git.remote.url = "https://github.com/Trantorian1/learn-ai-coding-starter.git";
-          git.shutdown.pushOnExit = false;
-          git.withLocalChanges = true;
+      nixosModules = {
+        sandbox-config = {...}: {
+          opencode-sandbox = {
+            git.remote.url = "https://github.com/Trantorian1/learn-ai-coding-starter.git";
+            git.shutdown.pushOnExit = false;
+            git.withLocalChanges = true;
 
-          forwardPorts = [8888];
-          env.extend = [self.packages.devenv];
+            # env.extend = [self'.packages.devenv];
+            opencode.config.mountHomeConfig = true;
+            forwardPorts = [8888];
+          };
+
+          programs.nix-ld.enable = true;
+
+          system.stateVersion = "26.11";
+        };
+      };
+
+      perSystem = {
+        self',
+        opencode-sandbox',
+        pkgs,
+        libpkgs,
+        libmodules,
+        ...
+      }: {
+        formatter = pkgs.alejandra;
+
+        packages = rec {
+          sandbox = libmodules.build {
+            name = "opencode-sandbox.sandbox.package";
+
+            modules = [
+              opencode-sandbox'.nixosModules.microvm
+              opencode-sandbox'.nixosModules.sandbox
+              self.nixosModules.sandbox-config
+            ];
+          };
+
+          devenv = libpkgs.mkEnv {
+            packages = with pkgs; [
+              go
+              bootdev-cli
+              uv
+              python313
+            ];
+          };
+
+          default = sandbox;
         };
 
-        programs.nix-ld.enable = true;
-
-        system.stateVersion = "26.11";
-      };
-    };
-
-    packages = util.forEachSystem ({
-      self,
-      opencode-sandbox,
-      pkgs,
-      libpkgs,
-      libmodules,
-      ...
-    }: rec {
-      sandbox = libmodules.build {
-        name = "opencode-sandbox.sandbox.package";
-
-        modules = [
-          opencode-sandbox.nixosModules.sandbox
-          opencode-sandbox.nixosModules.microvm
-          self.nixosModules.sandbox-config
-        ];
-      };
-
-      devenv = libpkgs.mkEnv {
-        packages = with pkgs; [
-          go
-          bootdev-cli
-          uv
-          python313
-        ];
-      };
-
-      default = sandbox;
-    });
-
-    devShells = util.forEachSystem ({
-      self,
-      pkgs,
-      ...
-    }: {
-      default = pkgs.mkShell {
-        packages = [self.packages.devenv];
+        devShells = {
+          default = pkgs.mkShell {
+            packages = [self'.packages.devenv];
+          };
+        };
       };
     });
-  };
 }
