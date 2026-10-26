@@ -7,3 +7,4 @@ __pycache__/
 result
 .sandbox
 nix-store-overlay.img
+node_modules/
