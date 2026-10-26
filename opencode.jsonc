@@ -20,6 +20,11 @@
     },
     {
       "action": "shell",
+      "resource": "bootdev submit *",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
       "resource": "bootdev run *",
       "effect": "allow"
     }
