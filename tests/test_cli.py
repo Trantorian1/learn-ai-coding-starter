@@ -36,6 +36,13 @@ def test_missing_file_and_usage():
     assert "could not read" in missing.stderr
 
 
+def test_missing_file_prints_argparse_usage():
+    completed = run_cli()
+    assert completed.returncode == 2
+    assert "usage: sloperator.py" in completed.stderr
+    assert "the following arguments are required: filename" in completed.stderr
+
+
 def test_check_passes_on_a_valid_file():
     completed = run_cli("--check", str(ROOT / "examples/hello.slop"))
     assert completed.returncode == 0
