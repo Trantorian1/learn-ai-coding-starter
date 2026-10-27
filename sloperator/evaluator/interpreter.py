@@ -177,6 +177,8 @@ class Interpreter:
             case TokenType.STAR:
                 return left * right
             case TokenType.SLASH:
+                if right == 0:
+                    raise SlopRuntimeError(operator.line, "division by zero")
                 return left // right
             case TokenType.LESS:
                 return left < right
