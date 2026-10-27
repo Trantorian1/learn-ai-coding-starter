@@ -45,7 +45,7 @@ class Interpreter:
     def __init__(self, out: TextIO) -> None:
         self.out = out
         self.globals = Environment()
-        self.globals.declare("hallucinate", Builtin("hallucinate", self.hallucinate), False, 0)
+        self.globals.declare("hallucinate", Builtin("hallucinate", self.hallucinate), "function", 0)
         self.environment = self.globals
         self.call_depth = 0
         self.last_call_line = 0
@@ -61,7 +61,8 @@ class Interpreter:
         match statement:
             case VarDecl(name, initializer, mutable):
                 value = self.evaluate(initializer)
-                self.environment.declare(name.lexeme, value, mutable, name.line)
+                kind = "loadbearing" if not mutable else "slop"
+                self.environment.declare(name.lexeme, value, kind, name.line)
             case Assign(name, _, value_expr):
                 value = self.evaluate(value_expr)
                 self.environment.assign(name.lexeme, value, name.line)
@@ -81,7 +82,9 @@ class Interpreter:
             case Block():
                 self.execute_block(statement, Environment(self.globals))
             case FunctionDecl(name, _, _):
-                self.environment.declare(name.lexeme, SlopFunction(statement), False, name.line)
+                self.environment.declare(
+                    name.lexeme, SlopFunction(statement), "function", name.line
+                )
             case _:
                 raise NotImplementedError(f"unknown statement {statement!r}")
 
@@ -219,7 +222,7 @@ class Interpreter:
 
         environment = Environment(self.globals)
         for param, argument in zip(declaration.params, arguments, strict=True):
-            environment.declare(param.lexeme, argument, True, param.line)
+            environment.declare(param.lexeme, argument, "slop", param.line)
 
         self.call_depth += 1
         self.last_call_line = paren.line

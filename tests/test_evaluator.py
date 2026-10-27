@@ -106,6 +106,38 @@ hallucinate(n)✨"""
     assert run(source) == "105\n1\n"
 
 
+def test_loadbearing_is_immutable_but_readable():
+    source = """loadbearing LIMIT = 100✨
+slop score = 10✨
+hallucinate(score + LIMIT)✨
+score = score + 1✨
+hallucinate(score)✨"""
+    assert run(source) == "110\n11\n"
+
+
+def test_loadbearing_can_be_declared_inside_a_block():
+    source = """{
+    loadbearing inner = 5✨
+    hallucinate(inner)✨
+}
+hallucinate(inner)✨"""
+    result = run_source(source)
+    assert result.stdout == "5\n"
+    assert result.stderr == "SlopLang runtime error at line 5: undefined variable 'inner'\n"
+
+
+def test_loadbearing_inside_a_function_does_not_leak():
+    source = """clanker scoped() {
+    loadbearing secret = 42✨
+    ship secret✨
+}
+hallucinate(scoped())✨
+hallucinate(secret)✨"""
+    result = run_source(source)
+    assert result.stdout == "42\n"
+    assert result.stderr == "SlopLang runtime error at line 6: undefined variable 'secret'\n"
+
+
 def test_ship_unwinds_nested_blocks_and_loops():
     source = """clanker find() {
     slop i = 0✨

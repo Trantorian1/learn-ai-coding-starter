@@ -42,6 +42,12 @@ CASES = [
     ("hallucinate(nope)✨", "runtime", 1, "undefined variable 'nope'"),
     ("hallucinate(later())✨\nclanker later() {\n}", "runtime", 1, "undefined variable 'later'"),
     ("clanker f() {\n}\nf = 2✨", "runtime", 3, "cannot assign to immutable binding 'f'"),
+    (
+        "loadbearing LIMIT = 100✨\nLIMIT = 200✨",
+        "runtime",
+        2,
+        "cannot assign to loadbearing 'LIMIT'",
+    ),
     ("slop x = 1✨\nslop x = 2✨", "runtime", 2, "'x' is already declared in this scope"),
     ("vibe 1 {\n}", "runtime", 1, "vibe condition must be a boolean, got number"),
     (

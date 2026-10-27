@@ -7,7 +7,7 @@ from sloperator.evaluator.values import Value
 @dataclass
 class Binding:
     value: Value
-    mutable: bool
+    kind: str  # "slop" | "loadbearing" | "function"
 
 
 class Environment:
@@ -15,19 +15,22 @@ class Environment:
         self.bindings: dict[str, Binding] = {}
         self.parent = parent
 
-    def declare(self, name: str, value: Value, mutable: bool, line: int) -> None:
+    def declare(self, name: str, value: Value, kind: str, line: int) -> None:
         if name in self.bindings:
             raise SlopRuntimeError(line, f"'{name}' is already declared in this scope")
-        self.bindings[name] = Binding(value, mutable)
+        self.bindings[name] = Binding(value, kind)
 
     def get(self, name: str, line: int) -> Value:
         return self.lookup(name, line).value
 
     def assign(self, name: str, value: Value, line: int) -> None:
         binding = self.lookup(name, line)
-        if not binding.mutable:
+        if binding.kind == "slop":
+            binding.value = value
+        elif binding.kind == "loadbearing":
+            raise SlopRuntimeError(line, f"cannot assign to loadbearing '{name}'")
+        else:  # function
             raise SlopRuntimeError(line, f"cannot assign to immutable binding '{name}'")
-        binding.value = value
 
     def lookup(self, name: str, line: int) -> Binding:
         env: Environment | None = self
