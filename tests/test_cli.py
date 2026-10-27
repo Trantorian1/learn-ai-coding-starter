@@ -34,3 +34,28 @@ def test_missing_file_and_usage():
     missing = run_cli(str(ROOT / "nope.slop"))
     assert missing.returncode == 2
     assert "could not read" in missing.stderr
+
+
+def test_check_passes_on_a_valid_file():
+    completed = run_cli("--check", str(ROOT / "examples/hello.slop"))
+    assert completed.returncode == 0
+    assert completed.stderr == ""
+    assert "validated" in completed.stdout
+
+
+def test_check_reports_a_syntax_error(tmp_path: Path):
+    program = tmp_path / "broken.slop"
+    program.write_text("hallucinate(“oops)✨", encoding="utf-8")
+    completed = run_cli("--check", str(program))
+    assert completed.returncode == 1
+    assert completed.stdout == ""
+    assert "SlopLang lexical error" in completed.stderr
+    assert "Traceback" not in completed.stderr
+
+
+def test_check_does_not_execute_runtime_errors(tmp_path: Path):
+    program = tmp_path / "runtime.slop"
+    program.write_text("hallucinate(missing)✨", encoding="utf-8")
+    completed = run_cli("--check", str(program))
+    assert completed.returncode == 0
+    assert completed.stderr == ""

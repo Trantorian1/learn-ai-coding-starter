@@ -10,6 +10,12 @@ Files use the `.slop` extension and run with:
 uv run sloperator.py path/to/program.slop
 ```
 
+Check a file's syntax without running it:
+
+```bash
+uv run sloperator.py --check path/to/program.slop
+```
+
 ### Example
 
 ```slop
