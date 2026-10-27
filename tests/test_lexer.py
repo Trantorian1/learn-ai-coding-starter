@@ -51,6 +51,10 @@ def test_string_may_contain_em_dash_and_opening_quote():
     assert tokenize("“x — “y”")[0].literal == "x — “y"
 
 
+def test_backslash_t_escape_becomes_tab():
+    assert tokenize("“a\\tb”")[0].literal == "a\tb"
+
+
 @pytest.mark.parametrize(
     ("source", "line", "message"),
     [
